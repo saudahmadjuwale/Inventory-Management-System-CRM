@@ -115,7 +115,6 @@
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h3>Add Tenant</h3>
-
         <form method="POST" action="{% url 'add-tenant' %}">
             {% csrf_token %}
             <input type="text" name="name" placeholder="Company Name"><br><br>
@@ -131,12 +130,10 @@
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3>Edit Tenant</h3>
-
         <form method="POST" id="editForm">
             {% csrf_token %}
             <input type="text" name="name" id="editName"><br><br>
             <input type="email" name="email" id="editEmail"><br><br>
-
             <button type="submit" class="btn">Update</button>
             <button type="button" onclick="closeModal('editModal')">Close</button>
         </form>
