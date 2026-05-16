@@ -8,6 +8,8 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 import uuid
 from django.template.loader import render_to_string
+def home(request):
+    return redirect('login')
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
