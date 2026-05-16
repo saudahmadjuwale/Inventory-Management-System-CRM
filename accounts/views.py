@@ -8,8 +8,6 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 import uuid
 from django.template.loader import render_to_string
-def home(request):
-    return redirect('login')
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -67,20 +65,20 @@ def add_tenant(request):
             token_expiry=expiry,
             is_password_set=False
         )
-        # setup_link = f"http://127.0.0.1:8000/accounts/setup/{token}/"
-        # subject = "Set up your account - Web Ginnie"
-        # html_content = render_to_string('emails/setup_email.html', {
-        #     'setup_link': setup_link
-        # })
+        setup_link = f"http://127.0.0.1:8000/accounts/setup/{token}/"
+        subject = "Set up your account - Web Ginnie"
+        html_content = render_to_string('emails/setup_email.html', {
+            'setup_link': setup_link
+        })
 
-        # email = EmailMultiAlternatives(
-        #     subject=subject,
-        #     body="Please use an HTML compatible email client",  # fallback
-        #     from_email=settings.EMAIL_HOST_USER,
-        #     to=[email]
-        # )
-        # email.attach_alternative(html_content, "text/html")
-        # email.send()
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body="Please use an HTML compatible email client",  # fallback
+            from_email=settings.EMAIL_HOST_USER,
+            to=[email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
         return redirect('superadmin')
 def update_tenant(request, id):
     if not request.user.is_superuser:
@@ -141,33 +139,33 @@ def edit_user(request, user_id):
         messages.success(request, "User updated successfully")
 
     return redirect('tenant_detail', id=tenant.id)
-# def setup_password(request, token):
-#     user = User.objects.filter(setup_token=token).first()
+def setup_password(request, token):
+    user = User.objects.filter(setup_token=token).first()
 
-#     if not user:
-#         messages.error(request, "Invalid setup link")
-#         return redirect('login')
+    if not user:
+        messages.error(request, "Invalid setup link")
+        return redirect('login')
 
-#     if user.token_expiry < timezone.now():
-#         messages.error(request, "Setup link expired")
-#         return redirect('login')
+    if user.token_expiry < timezone.now():
+        messages.error(request, "Setup link expired")
+        return redirect('login')
 
-#     if request.method == 'POST':
-#         password = request.POST.get('password')
+    if request.method == 'POST':
+        password = request.POST.get('password')
 
-#         user.set_password(password)
-#         user.is_password_set = True
+        user.set_password(password)
+        user.is_password_set = True
 
-#         # clear token
-#         user.setup_token = None
-#         user.token_expiry = None
+        # clear token
+        user.setup_token = None
+        user.token_expiry = None
 
-#         user.save()
+        user.save()
 
-#         messages.success(request, "Password set successfully. Please login.")
-#         return redirect('login')
+        messages.success(request, "Password set successfully. Please login.")
+        return redirect('login')
 
-#     return render(request, 'authentication/setup_password.html')
+    return render(request, 'authentication/setup_password.html')
 def owner_dashboard(request):
     user = request.user
     return render(request, 'dashboard/owner.html', {'user':user})
