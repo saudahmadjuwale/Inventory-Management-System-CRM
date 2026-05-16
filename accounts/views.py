@@ -4,7 +4,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from .models import Tenant, User
 from django.utils import timezone 
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.conf import settings
 import uuid
+from django.template.loader import render_to_string
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -18,11 +21,11 @@ def login_view(request):
             if user.is_superuser:
                 return redirect('superadmin')
             if user.role == 'owner':
-                return redirect('accounts/owner')
+                return redirect('owner',)
             if user.role == 'admin':
-                return redirect('accounts/admin')
+                return redirect('admin')
             if user.role == 'agent':
-                return redirect('accounts/agent')
+                return redirect('agent')
     return render(request,'authentication/login.html')
 
 def superadmin_dashboard(request):
@@ -53,7 +56,6 @@ def add_tenant(request):
         tenant = Tenant.objects.create(name=name, email=email)
         token = str(uuid.uuid4())
         expiry = timezone.now() + timezone.timedelta(hours=24)
-        
         user = User.objects.create(
             username=email,
             email=email,
@@ -63,6 +65,21 @@ def add_tenant(request):
             token_expiry=expiry,
             is_password_set=False
         )
+        setup_link = f"http://127.0.0.1:8000/accounts/setup/{token}/"
+        subject = "Set up your account - Web Ginnie"
+        html_content = render_to_string('emails/setup_email.html', {
+            'setup_link': setup_link
+        })
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body="Please use an HTML compatible email client",  # fallback
+            from_email=settings.EMAIL_HOST_USER,
+            to=[email]
+        )
+
+        email.attach_alternative(html_content, "text/html")
+        email.send()
         return redirect('superadmin')
 def update_tenant(request, id):
     if not request.user.is_superuser:
@@ -123,8 +140,36 @@ def edit_user(request, user_id):
         messages.success(request, "User updated successfully")
 
     return redirect('tenant_detail', id=tenant.id)
+def setup_password(request, token):
+    user = User.objects.filter(setup_token=token).first()
 
+    if not user:
+        messages.error(request, "Invalid setup link")
+        return redirect('login')
 
+    if user.token_expiry < timezone.now():
+        messages.error(request, "Setup link expired")
+        return redirect('login')
+
+    if request.method == 'POST':
+        password = request.POST.get('password')
+
+        user.set_password(password)
+        user.is_password_set = True
+
+        # clear token
+        user.setup_token = None
+        user.token_expiry = None
+
+        user.save()
+
+        messages.success(request, "Password set successfully. Please login.")
+        return redirect('login')
+
+    return render(request, 'authentication/setup_password.html')
+def owner_dashboard(request):
+    user = request.user
+    return render(request, 'dashboard/owner.html', {'user':user})
 def logout_view(request):
     logout(request)
     return redirect('login')
