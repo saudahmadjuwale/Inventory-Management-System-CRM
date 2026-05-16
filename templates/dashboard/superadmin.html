@@ -106,7 +106,7 @@
                         onclick="openEditModal('{{ tenant.id }}','{{ tenant.name }}','{{ tenant.email }}')">
                         Edit
                     </button>
-
+                    {% if tenant.is_active %}
                     <form method="POST" action="{% url 'delete-tenant' tenant.id %}" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn" style="background:red; padding: 7px;"
@@ -114,6 +114,7 @@
                             De-Activate
                         </button>
                     </form>
+                    {% endif %}
                     {% if not tenant.is_active %}
                         <form method="POST" action="{% url 'hard-delete-tenant' tenant.id %}">
                             {% csrf_token %}
