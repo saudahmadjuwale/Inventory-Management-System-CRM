@@ -11,20 +11,23 @@ from django.template.loader import render_to_string
 import os
 import resend
 
+
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
 def send_setup_email(to_email, setup_link):
     try:
-        resend.Emails.send({
-            "from": "onboarding@resend.dev",  # default works
-            "to": to_email,
-            "subject": "Set up your account",
-            "html": f"""
-                <h2>Welcome to GinnieFlow</h2>
-                <p>Click below to set your password:</p>
-                <a href="{setup_link}">Setup Password</a>
-            """
+        # ✅ render HTML template
+        html_content = render_to_string('emails/setup_email.html', {
+            'setup_link': setup_link
         })
+
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": [to_email],
+            "subject": "Set up your account",
+            "html": html_content   # 👈 USE TEMPLATE HERE
+        })
+
     except Exception as e:
         print("Email error:", e)
 def login_view(request):
@@ -64,17 +67,20 @@ def superadmin_dashboard(request):
 def add_tenant(request):
     if not request.user.is_superuser:
         return redirect('login')
+
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
-        owner_email = request.POST.get('owner_email')
 
         if Tenant.objects.filter(email=email).exists() or User.objects.filter(email=email).exists():
             messages.error(request, "Tenant with this email already exists")
             return redirect('superadmin')
+
         tenant = Tenant.objects.create(name=name, email=email)
+
         token = str(uuid.uuid4())
         expiry = timezone.now() + timezone.timedelta(hours=24)
+
         user = User.objects.create(
             username=email,
             email=email,
@@ -84,20 +90,12 @@ def add_tenant(request):
             token_expiry=expiry,
             is_password_set=False
         )
-        setup_link = f"http://127.0.0.1:8000/accounts/setup/{token}/"
-        subject = "Set up your account - Web Ginnie"
-        html_content = render_to_string('emails/setup_email.html', {
-            'setup_link': setup_link
-        })
+        setup_link = f"https://inventory-management-system-crm.onrender.com/accounts/setup/{token}/"
 
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body="Please use an HTML compatible email client",  # fallback
-            from_email=settings.EMAIL_HOST_USER,
-            to=[email]
-        )
-        email.attach_alternative(html_content, "text/html")
-        send_setup_email(email, setup_link)
+        send_setup_email(user.email, setup_link)
+
+        messages.success(request, "Tenant created and setup email sent")
+
         return redirect('superadmin')
 def update_tenant(request, id):
     if not request.user.is_superuser:
