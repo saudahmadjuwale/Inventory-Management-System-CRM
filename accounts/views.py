@@ -79,7 +79,10 @@ def add_tenant(request):
         )
 
         email.attach_alternative(html_content, "text/html")
-        email.send()
+        try:
+            email.send()
+        except Exception as e:
+            print("Email failed:", e)
         return redirect('superadmin')
 def update_tenant(request, id):
     if not request.user.is_superuser:
