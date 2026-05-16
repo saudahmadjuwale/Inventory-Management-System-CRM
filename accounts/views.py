@@ -8,6 +8,23 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 import uuid
 from django.template.loader import render_to_string
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
+
+def send_setup_email(to_email, setup_link):
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",  # default works
+            "to": to_email,
+            "subject": "Set up your account",
+            "html": f"""
+                <h2>Welcome to GinnieFlow</h2>
+                <p>Click below to set your password:</p>
+                <a href="{setup_link}">Setup Password</a>
+            """
+        })
+    except Exception as e:
+        print("Email error:", e)
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -78,7 +95,7 @@ def add_tenant(request):
             to=[email]
         )
         email.attach_alternative(html_content, "text/html")
-        email.send()
+        send_setup_email(email, setup_link)
         return redirect('superadmin')
 def update_tenant(request, id):
     if not request.user.is_superuser:
