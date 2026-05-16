@@ -1,7 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <style>
         body {
             margin: 0;
@@ -101,12 +103,6 @@
 <p style="font-size: 14px; color: #ffffff; margin-top: 50px;">
     GinnieEstate — your intelligent platform for real estate operations.
 </p>
-{% if messages %}
-    {% for message in messages %}
-        <div class="message {{ message.tags }}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
+{% include 'partials/messages.html' %}
 </body>
 </html>

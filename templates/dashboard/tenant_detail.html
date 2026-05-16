@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+</head>
+<body>
+<a href="{% url 'superadmin' %}">Go Back</a>
+{% include 'components/messages.html' %}
+<h2>{{ tenant.name }}</h2>
+<p>Email: {{ tenant.email }}</p>
+<p>Status: {{ tenant.status }}</p>
+
+<hr>
+
+<h3>Users</h3>
+
+<table border="1">
+    <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Action</th>
+
+    </tr>
+
+    {% for user in users %}
+    <tr>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td><button onclick="openEditModal('{{ user.id }}','{{ user.email }}')">Edit User</button>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Tenant</h3>
+        <form method="POST" id="editForm">
+            {% csrf_token %}
+            <input type="email" name="email" id="editEmail"><br><br>
+            <button type="submit" class="btn">Update</button>
+            <button type="button" onclick="closeModal('editModal')">Close</button>
+        </form>
+    </div>
+</div>
+</body>
+<script>
+function openModal(id){
+    document.getElementById(id).style.display='block';
+}
+
+function closeModal(id){
+    document.getElementById(id).style.display='none';
+}
+
+function openEditModal(userId, email){
+    document.getElementById('editModal').style.display = 'block';
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editForm').action = "/accounts/edit-user/" + userId + "/";
+}
+</script>
+</html>
