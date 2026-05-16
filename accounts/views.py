@@ -8,6 +8,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 import uuid
 from django.template.loader import render_to_string
+import os
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
