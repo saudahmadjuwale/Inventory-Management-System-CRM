@@ -9,6 +9,7 @@ from django.conf import settings
 import uuid
 from django.template.loader import render_to_string
 import os
+import resend
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
