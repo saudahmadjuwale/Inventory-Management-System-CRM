@@ -26,9 +26,18 @@ def login_view(request):
 
 def superadmin_dashboard(request):
     if not request.user.is_superuser:
-        return redirect('login')  
-    tenants = Tenant.objects.all()  
-    return render(request, 'dashboard/superadmin.html',{'tenants':tenants})
+        return redirect('login')
+    status = request.GET.get('status', 'active')  
+    if status == 'inactive':
+        tenants = Tenant.objects.filter(is_active=False)
+    elif status == 'all':
+        tenants = Tenant.objects.all()
+    else:
+        tenants = Tenant.objects.filter(is_active=True)
+    return render(request, 'dashboard/superadmin.html', {
+        'tenants': tenants,
+        'status': status
+    })
 def add_tenant(request):
     if not request.user.is_superuser:
         return redirect('login')
@@ -53,8 +62,19 @@ def delete_tenant(request, id):
     tenant = get_object_or_404(Tenant, id=id)
 
     if request.method == 'POST':
-        tenant.delete()
-
+        tenant.is_active = False
+        tenant.save()
         return redirect('superadmin')
+
+    return redirect('superadmin')
+def hard_delete_tenant(request, id):
+    if not request.user.is_superuser:
+        return redirect('login')
+
+    tenant = get_object_or_404(Tenant, id=id)
+    if tenant.is_active:
+        return HttpResponseForbidden("Deactivate first")
+    if request.method == 'POST':
+        tenant.delete()
 
     return redirect('superadmin')
