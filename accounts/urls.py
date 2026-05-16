@@ -11,7 +11,7 @@ urlpatterns = [
     path('hard-delete-tenant/<int:id>/', views.hard_delete_tenant, name='hard-delete-tenant'),
     path('tenant/<int:id>/', views.tenant_detail, name='tenant_detail'),
     path('edit-user/<int:user_id>/', views.edit_user, name='edit-user'),
-    path('setup/<str:token>/', views.setup_password, name='setup_password'),
+    # path('setup/<str:token>/', views.setup_password, name='setup_password'),
     path('owner',views.owner_dashboard,name='owner'),
     path('logout/', views.logout_view, name='logout')
 ]
